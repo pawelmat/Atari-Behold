@@ -1,0 +1,659 @@
+<html>
+	<head>
+		<title>Behold prototyper</title>
+		<meta name="language" content="en" />
+		<meta name="description" content="Behold prototyper" />
+		<meta name="author" content="Kane">
+		<meta name="date" content="08/2021">
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<link rel="shortcut icon" href="assets/favicon.ico" type="image/x-icon" />
+		<link rel="stylesheet" href="assets/body.css?a=1">
+		<script src="assets/palette.js"></script>
+		<script src="assets/jquery.min.js"></script>
+	</head>
+	<body style="background-color:black; color:white;">
+
+			<div align="center" id="level-editor">
+				<table style="width:1100px"><tr><td>
+					<table style="border-spacing: 0px;"><tr>
+						<td align="left" style="width:650px;text-align: left;border: 1px solid green;border-radius: 4px;vertical-align:center;padding:10px">
+							<div style="width:640px;height:450px;border:0;position: relative;vertical-align:center;">
+								<canvas width="80" height="56" shadowBlur="0" id="myCanvas" style="width:640px;height:448px;background:#000;border:0;margin:0;padding:0;position:absolute; z-index: 1;">Canvas not supported</canvas>
+							</div>
+						</td>
+						<td style="width:5px;"></td>
+						<td style="width:445px;border: 1px solid green;border-radius: 4px;vertical-align:top;">
+							<div align="left" style="margin:8px;">
+							Effect: &nbsp;<label id="effectNrLab" style="color:lightgreen;">0</label>&nbsp&nbsp&nbsp
+							Time: &nbsp;<label id="timeCnt" style="color:yellow;">0</label>&nbsp&nbsp&nbsp
+							Refresh: &nbsp;<label id="refCnt" style="color:yellow;">0</label>
+							<br>
+							</div>
+							<div id="effectButtons">
+							</div>
+					</tr></table>
+				</td></tr></table>
+			</div>
+			<br>
+			<div id="footer-wrapper">
+				<table class="centertab">
+					  <tr><td><label class="tc1">(C)2021 Kane / Suspect</label></td></tr>
+				</table>
+				<br>
+			</div>
+	<script>
+
+	const	width = 40, widthp = width*2
+	const	height = 56
+	
+	var		fps = 50
+
+	var		ctx, imgData, scrData  // // screen data as rows of [r,g,b,a] quadruples
+	var		s						// screen array[x][y]
+	var		sb1, sb2				// backup screens
+	var		colors = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]
+
+	var		updateCanvasTimer = null, secondTimer = null, effectTimer=null
+	var		updateCnt = 0
+	var		secondsCnt = 0
+
+
+
+	// "entry" function executed on page load complete
+	$(document).ready(function(){
+	
+		ctx = $("#myCanvas")[0].getContext('2d');
+		imgData=ctx.getImageData(0,0,widthp,height)
+		scrData = imgData.data
+
+		s = createScreen()
+		sb1 = createScreen()
+		sb2 = createScreen()
+		
+		sb1 = new Array(width)
+		for (var i = 0; i < sb1.length; i++) {
+			sb1[i] = new Array(height);
+		}
+		
+		setButtons()
+		clearScreen(s)
+		clearScreen(sb1)
+		clearScreen(sb2)
+		clearPalette()
+		startTimers()
+		runEffect(defaultEffect)
+	});
+
+	function startTimers() {
+		// start 1-second timer
+		secondTimer = setInterval(function() {countSeconds();}, 1000)
+
+		// update canvas set to 50 fps
+		updateCanvasTimer = setInterval(function() { updateCanvas();}, 1000/fps)
+
+		// run effect tick at 50 fps
+		effectTimer = setInterval(function() {effectHandler();}, 1000/fps)	
+	}
+
+	function stopTimers() {
+		if (secondTimer) { clearInterval(secondTimer) }
+		if (updateCanvasTimer) { clearInterval(updateCanvasTimer) }
+		if (effectTimer) { clearInterval(effectTimer) }
+	}
+
+	function createScreen() {
+		var scr = new Array(width)
+		for (var i = 0; i < scr.length; i++) {
+			scr[i] = new Array(height);
+		}
+		return scr
+	}
+
+	function clearScreen(scr) {
+		for(var x=0; x<width; x++) {
+			for(var y=0; y<height; y++) {
+				scr[x][y] = 0
+			}
+		}
+	}
+
+	function clearPalette() {
+		for(var x=0; x<colors.length; x++) {
+			colors[x] = 0
+		}
+	}
+
+	function setPalette(p) {
+		console.log(effectNr + ": Setting palette " + p)
+		for(var x=0; x<p.length; x++) {
+			colors[x] = p[x]
+		}
+	}
+	
+	// add effect run buttons to html
+	function setButtons() {
+	
+		var s = ""
+		for (var i=1; i<effects.length ;i++) {
+			let nr = effects[i][0]
+			s+= '&nbsp;<label class="button1" onclick="runEffect('+nr+')">&nbsp; Effect '+nr+' &nbsp;</label><br>'
+		}
+		$("#effectButtons").html(s)
+	}
+	
+	// updates canvas with latest screen data
+	function updateCanvas(){
+		for(var x=0; x<width; x++) {
+			for(var y=0; y<height; y++) {
+				let b=s[x][y]%256
+				let b1=Math.floor(b/16); b2=b%16
+				let c1=colors[b1]*4, c2=colors[b2]*4
+				let ind=(y*widthp + x*2)*4
+
+				scrData[ind] = palette[c1]
+				scrData[ind+1] = palette[c1+1]
+				scrData[ind+2] = palette[c1+2]
+				scrData[ind+3] = 255
+				scrData[ind+4] = palette[c2]
+				scrData[ind+5] = palette[c2+1]
+				scrData[ind+6] = palette[c2+2]
+				scrData[ind+7] = 255
+			}
+		}
+		ctx.putImageData(imgData, 0, 0)
+		updateCnt++
+		printUpdateCnt()
+	}
+
+	function printUpdateCnt() {
+		$("#refCnt").html(updateCnt + "&nbsp;(" + Math.floor(updateCnt/fps) + ")")
+	}
+
+	function countSeconds() {
+		secondsCnt++
+		printSecondsCnt()
+	}
+
+	function printSecondsCnt() {
+		$("#timeCnt").html(secondsCnt)
+	}
+
+	// return number as hex string
+	function numHex(s)
+	{
+		var a = s.toString(16);
+		if ((a.length % 2) > 0) {
+			a = "0" + a;
+		}
+		return a;
+	}
+	
+	// effect handler on fps timer
+	function effectHandler() {
+		if (effectNr!=0) {
+			eff = effects[effectNr][2]
+			eff()
+		}
+	}
+
+	// run new effect
+	function runEffect(nr) {
+		stopTimers()
+		stopEffect()
+		updateCnt = 0
+		printUpdateCnt()
+		secondsCnt = 0
+		printSecondsCnt()
+		startEffect(nr)
+		startTimers()
+	}
+
+	// stop running effect
+	function stopEffect() {
+		if (effectNr!=0) {
+			clearScreen(s)
+			clearScreen(sb1)
+			clearScreen(sb2)
+			clearPalette()
+			effectNr = 0
+			$("#effectNrLab").html(0)
+		}
+	}
+
+	// start effect
+	function startEffect(nr) {
+		if (nr!=0 && nr<effects.length) {
+			effectNr = nr
+			p = effects[effectNr][3]
+			if (p!=null) setPalette(p)
+			init = effects[effectNr][1]
+			if (init!=null) { 
+				console.log(effectNr+ ": Initialising")
+				init()
+			}
+			$("#effectNrLab").html(nr)
+		}
+	}
+
+
+//------------------------------------------------------------------------------------
+// Effects
+//------------------------------------------------------------------------------------
+	var		effectNr = 0
+	var		t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11,t12,t13,t14,t15,t16	// these can be used in the demo
+	var		e1,e2,e3,e4,e5,e6,e7,e8,e9,e10	// these are local only and would not translate to demo variables
+
+//------------------------------------------------------------------------------------
+// 01
+
+	var		palette01 = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+
+	function init01() {
+		t1 = 0
+	}
+
+	function effect01() {
+		for(var x=0; x<width; x++) {
+			for(var y=0; y<height; y++) {
+				var cx=Math.floor((x+t1)/2)%16
+				s[x][y] = cx + cx*16
+			}
+		}
+		t1++
+	}
+
+//------------------------------------------------------------------------------------
+// 02
+
+//	var		palette02 = [0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15]
+	var		palette02 =  [0,0x01,0x12,0x14,0xf6,0xf8,0xfa,0xfe,0x0f]
+	var		palette02b = [0,0xd1,0xd2,0xd4,0xd6,0xd8,0xda,0xde,0x0f]
+	var		palette02c = [0,0x91,0x92,0x94,0x96,0x98,0x9a,0x9e,0x0f]
+	var		palette02d = [0,0x51,0x52,0x54,0x56,0x58,0x5a,0x5e,0x0f]
+	var		sintab02 = [ 
+		[width/2+5,height/2,0,1,128,2],
+		[width/2+4,height/2,0,2,128,3],
+		[width/2+3,height/2,0,3,0,4],
+		[width/2+2,height/2,0,4,128,3],
+		[width/2+1,height/2,0,3,0,1],
+		[width/2+0,height/2,0,5,128,2],
+
+		[width/2-5,height/2,128,1,128,3],
+		[width/2-4,height/2,128,3,128,1],
+		[width/2-3,height/2,128,5,0,4],
+		[width/2-2,height/2,128,4,128,2],
+		[width/2-1,height/2,128,2,0,7]
+
+	]
+	var 	palettes02 = [palette02, palette02b, palette02c, palette02d]
+	var		trail = [1,4,2,3,2]
+
+
+	function init02() {
+		fps = 50
+	
+		t1 = 0		// decrease screen intensity counter
+		t2 = 0		// palette change counter
+		t3 = 0		// palette index
+		t4 = 1		// trail length
+		
+		e1 = 256	// sin period in samples
+		e2 = 14		// amplitude
+		e3 = 8		// max colour
+	}
+
+	function sin02(x) {
+		x%=e1
+		return Math.floor(e2*Math.sin(x*2*Math.PI/e1))
+	}
+
+	function effect02() {
+		t1++
+		t1%=t4
+		if (t1==0) {
+			for(var x=0; x<width; x++) {
+				for(var y=0; y<height; y++) {
+					c = s[x][y]
+					if (c>0) {
+						c = c - (0x11)
+						s[x][y] = c
+					}
+				}
+			}
+		}
+
+		if (t3<4) {
+			for (var i=0; i<sintab02.length; i++) {
+				x = sintab02[i][0]
+				y = sintab02[i][1]
+				x += sin02(sintab02[i][2])
+				sintab02[i][2]+=sintab02[i][3]
+				y += Math.floor(6/4*sin02(sintab02[i][4]))
+				sintab02[i][4]+=sintab02[i][5]
+				s[x][y] = e3*16+e3
+				s[x][y+1] = e3*16+e3
+			}
+		}
+		
+		t2++
+		if (t2==128) {
+			t2 = 0
+			t3++
+			var tmp1 = t3%palettes02.length
+			setPalette(palettes02[tmp1])
+
+			tmp1 = t3%(palettes02.length+1)
+			t4 = trail[tmp1]
+		}
+
+	}
+	
+//------------------------------------------------------------------------------------
+// 03
+
+//	var		palette03 =  [0,0x10,0x12,0x14,0x16,0x18,0xf8,0xfa,0xfc]
+//	var		palette03 =  [0,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08]
+//	var		palette03 =  [0,0xe0,0xe1,0xe2,0xe3,0xe4,0xe5,0xe6,0xdd]
+//	var		palette03 =  [0,0xe0,0xe2,0xe4,0xa3,0xa4,0xa5,0x76,0x79]
+	var		palette03 =  [0,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,9,10,11,12,13,14,15]
+	var		st03 = [
+		[0,1, 40,2, 170,2, 20,1],
+		[80,-2, 70,-1, 0,1, 23,3]
+	]
+
+	function init03() {
+		fps = 50
+		
+		t1 = 0			// update every nth frame
+		t2 = 2			// delay counter-increment
+		
+		e1 = 256		// sin period in samples
+		e2 = 7			// amplitude sin1
+		e3 = 7			// centre sin1
+
+		e10 = 0x22		// font colour
+
+		sb1[10][10] = e10; sb1[10][11] = e10; sb1[10][12] = e10; sb1[10][13] = e10; sb1[10][14] = e10; sb1[10][15] = e10
+		sb1[16][10] = e10; sb1[16][11] = e10; sb1[16][12] = e10; sb1[16][13] = e10; sb1[16][14] = e10; sb1[16][15] = e10
+		sb1[11][10] = e10; sb1[12][10] = e10; sb1[13][10] = e10; sb1[14][10] = e10; sb1[15][10] = e10; 
+		sb1[11][14] = e10; sb1[12][14] = e10; sb1[13][14] = e10; sb1[14][14] = e10; sb1[15][14] = e10;
+
+/*
+		var str = ""
+		for (var x=0; x<256; x++) {
+			str += numHex(sin03(x)) + ", "
+		}
+		console.log(str)
+*/
+	}
+
+	function sin03_map(x) {
+		x%=e1
+		let val = Math.floor(e3+e2*Math.sin(x*2*Math.PI/e1))
+		if (val>=(e2+e3)) { val = e2+e3-1 }
+		return (val+val*16)			// double pixel colour
+	}
+
+	function sin03_256(x) {
+		x%=e1
+		return Math.floor(128+127*Math.sin(x*2*Math.PI/e1))
+	}
+
+	function sin03_A(x) {
+		x%=e1
+		let a =100
+		return Math.floor(a+a*Math.sin(x*2*Math.PI/e1))
+	}
+
+	function sin03_B(x) {
+		x%=e1
+		let a = 40
+		return Math.floor(a+a*Math.sin(x*2*Math.PI/e1))
+	}
+
+	function effect03() {
+
+		t1++
+		t1%=t2
+		if (t1==0) {
+			st03[0][0] += st03[0][1]
+			t3 = sin03_256(st03[0][0])			//X sin 1
+			st03[0][2] += st03[0][3]
+			t3 += sin03_A(st03[0][2])			//X sin 2
+			st03[0][4] += st03[0][5]			//Y sin 1
+			st03[0][6] += st03[0][7]			// + Y sin 2
+
+			st03[1][0] += st03[1][1]
+			t5 = sin03_256(st03[1][0])			//X sin 1
+			st03[1][2] += st03[1][3]
+			t5 += sin03_A(st03[1][2])			//X sin 2
+			st03[1][4] += st03[1][5]			//Y sin 1
+			st03[1][6] += st03[1][7]			// + Y sin 2
+
+
+//			for(var x=0; x<width; x++) {
+			for(var y=0; y<height; y++) {
+
+				t4 = t3 + sin03_A(y + st03[0][4])
+				t4 = t4 + sin03_B(y + st03[0][6])
+
+//				t4 = t3 + sin03_A(x + st03[0][4])
+//				t4 = t4 + sin03_B(x + st03[0][6])
+
+				t6 = t5 + sin03_A(y + st03[1][4])
+				t6 = t6 + sin03_B(y + st03[1][6])
+
+
+//				for(var y=0; y<height; y++) {
+				for(var x=0; x<width; x++) {
+					t4 += 4
+					t6 += 3
+
+					c1 = sin03_map(t4)
+					c2 = sin03_map(t6)
+					
+					c = sb1[x][y]
+					c += c1
+					c += c2
+					s[x][y] = c
+				}
+				
+			}
+		}
+
+	}
+
+//------------------------------------------------------------------------------------
+// 04
+
+//	var		palette04 =  [0,0xe0,0xe2,0xe4,0xe6,0xe8,0xea,0xec,0x0f]
+	var		palette04 =  [0,0x90,0x92,0x94,0x96,0x98,0x9a,0x9c,0x0f]
+	var		st04 = [
+//		[0,1, 35,-2, 170,2, 20,1]
+		[0,-2, 135,-1, 10,-2, 23,-5]
+	]
+
+	function init04() {
+		fps = 50
+		
+		t1 = 0			// update every nth frame
+		t2 = 2			// delay counter-increment
+		
+		e1 = 256		// sin period in samples
+		e2 = 4			// amplitude sin1
+		e3 = 4			// centre sin1
+		e10 = 0x11		// font colour
+
+		sb1[10][10] = e10; sb1[10][11] = e10; sb1[10][12] = e10; sb1[10][13] = e10; sb1[10][14] = e10; sb1[10][15] = e10
+		sb1[16][10] = e10; sb1[16][11] = e10; sb1[16][12] = e10; sb1[16][13] = e10; sb1[16][14] = e10; sb1[16][15] = e10
+		sb1[11][10] = e10; sb1[12][10] = e10; sb1[13][10] = e10; sb1[14][10] = e10; sb1[15][10] = e10; 
+		sb1[11][14] = e10; sb1[12][14] = e10; sb1[13][14] = e10; sb1[14][14] = e10; sb1[15][14] = e10;
+
+	}
+
+	function sin04_map(x) {
+		x%=e1
+		let val = Math.floor(e3+e2*Math.sin(x*2*Math.PI/e1))
+		if (val>=(e2+e3)) { val = e2+e3-1 }
+		return (val+val*16)			// double pixel colour
+	}
+
+	function sin04_256(x) {
+		x%=e1
+		return Math.floor(128+127*Math.sin(x*2*Math.PI/e1))
+	}
+
+	function sin04_A(x) {
+		x%=e1
+		let a =90
+		return Math.floor(a+a*Math.sin(x*2*Math.PI/e1))
+	}
+
+	function sin04_B(x) {
+		x%=e1
+		let a = 40
+		return Math.floor(a+a*Math.sin(x*2*Math.PI/e1))
+	}
+
+	function effect04() {
+
+		t1++
+		t1%=t2
+		if (t1==0) {
+			st04[0][0] += st04[0][1]
+			t3 = sin04_256(st04[0][0])			//X sin 1
+			st04[0][2] += st04[0][3]
+			t3 += sin04_A(st04[0][2])			//X sin 2
+			st04[0][4] += st04[0][5]			//Y sin 1
+			st04[0][6] += st04[0][7]			// + Y sin 2
+
+//			for(var x=0; x<width; x++) {
+			for(var y=0; y<height; y++) {
+
+				t4 = t3 + sin04_A(y + st04[0][4])
+				t4 = t4 + sin04_B(y + st04[0][6])
+//				t4 = t3 + sin04_A(x + st04[0][4])
+//				t4 = t4 + sin04_B(x + st04[0][6])
+
+//				for(var y=0; y<height; y++) {
+//				for(var x=0; x<width; x++) {
+				for(var x=width-1; x>=0; x--) {
+//					t4 += 4
+					t4 += 2
+
+					c1 = sin04_map(t4)
+					
+					c = sb1[x][y]
+					c += c1
+
+					s[x][y] = c
+				}
+				
+			}
+		}
+
+	}
+
+//------------------------------------------------------------------------------------
+// 05
+
+//	var		palette05 =  [0,0xd0,0xd2,0xd4,0xd6,0xd8,0xda,0xdc,0x9f]
+	var		palette05 =  [0,0x10,0x12,0x14,0x16,0x18,0x1a,0x1c,0x9f]
+	var		st05 = [
+		[10,2, 25,1, 0,4, 0,-1]
+	]
+
+	function init05() {
+		fps = 50
+		
+		t1 = 0			// update every nth frame
+		t2 = 3			// delay counter-increment
+		
+		e1 = 256		// sin period in samples
+		e2 = 4			// amplitude sin1
+		e3 = 4			// centre sin1
+		e10 = 0x11		// font colour
+
+		sb1[10][10] = e10; sb1[10][11] = e10; sb1[10][12] = e10; sb1[10][13] = e10; sb1[10][14] = e10; sb1[10][15] = e10
+		sb1[16][10] = e10; sb1[16][11] = e10; sb1[16][12] = e10; sb1[16][13] = e10; sb1[16][14] = e10; sb1[16][15] = e10
+		sb1[11][10] = e10; sb1[12][10] = e10; sb1[13][10] = e10; sb1[14][10] = e10; sb1[15][10] = e10; 
+		sb1[11][14] = e10; sb1[12][14] = e10; sb1[13][14] = e10; sb1[14][14] = e10; sb1[15][14] = e10;
+
+	}
+
+	function sin05_map(x) {
+		x%=e1
+		let val = Math.floor(e3+e2*Math.sin(x*2*Math.PI/e1))
+		if (val>=(e2+e3)) { val = e2+e3-1 }
+		return (val+val*16)			// double pixel colour
+	}
+
+	function sin05_256(x) {
+		x%=e1
+		return Math.floor(128+127*Math.sin(x*2*Math.PI/e1))
+	}
+
+	function sin05_A(x) {
+		x%=e1
+		let a =90
+		return Math.floor(a+a*Math.sin(x*2*Math.PI/e1))
+	}
+
+	function sin05_B(x) {
+		x%=e1
+		let a = 40
+		return Math.floor(a+a*Math.sin(x*2*Math.PI/e1))
+	}
+
+	function effect05() {
+
+		t1++
+		t1%=t2
+		if (t1==0) {
+			st05[0][0] += st05[0][1]
+			t3 = sin05_256(st05[0][0])			//X sin 1
+			st05[0][2] += st05[0][3]
+			t3 += sin05_A(st05[0][2])			//X sin 2
+			st05[0][4] += st05[0][5]			//Y sin 1
+			st05[0][6] += st05[0][7]			// + Y sin 2
+
+			for(var x=0; x<width; x++) {
+
+				t4 = t3 + sin05_A(x + st05[0][4])
+				t4 = t4 + sin05_256(x + st05[0][6])
+
+				for(var y=0; y<height; y++) {
+					t4 += 1
+
+					c1 = sin05_map(t4)
+					
+					c = sb1[x][y]
+					c += c1
+
+					s[x][y] = c
+				}
+				
+			}
+		}
+
+	}
+
+
+//------------------------------------------------------------------------------------
+	var	effects = [
+			["0",null,null,null],
+			["1",init01,effect01,palette01],
+			["2",init02,effect02,palette02],
+			["3",init03,effect03,palette03],
+			["4",init04,effect04,palette04],
+			["5",init05,effect05,palette05]
+		]
+	var defaultEffect = 3
+
+//------------------------------------------------------------------------------------
+			
+	</script>
+
+	</body>
+</html>

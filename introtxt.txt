@@ -1,0 +1,34 @@
+; ******************************************************
+; BEHOLD demo, Kane / Suspect, 08/2021
+;
+; Text for the intro
+; ******************************************************
+
+//			 12345678901234567890123456789012
+	.byte	"       And the Lord said,       "
+	.byte	"                                "
+	.byte	"            BEHOLD,             "
+	.byte	"                                "
+	.byte	"    the people are one,         "
+	.byte	" and they have all one language;"
+	.byte	"    and now nothing will be     "
+	.byte	"     restrained from them,      "
+	.byte	" which they have imagined to do."
+	.byte	"                                "
+	.byte	"                                "
+	.byte	"                 <Genesis 11:6> ",$ff
+
+introtxt2
+//			 12345678901234567890123456789012
+	.byte	"       And then  I said,        "
+	.byte	"                                "
+	.byte	"            BEHOLD,             "
+	.byte	"                                "
+	.byte	"    the people have the one     "
+	.byte	"       and only ATARI;          "
+	.byte	"   and nothing can now be       "
+	.byte	"     restrained from them,      "
+	.byte	" which they have imagined to do."
+	.byte	"                                "
+	.byte	"                                "
+	.byte	"                 <Genesis 6502> ",$ff
