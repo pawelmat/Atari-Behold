@@ -1,5 +1,6 @@
 ; *******************************************
 ; Zero page definitions
+; Copyright (C) 2021 Pawel Matusz. Distributed under the terms of the GNU GPL-3.0.
 ; Kane / Suspect
 ; *******************************************
 
