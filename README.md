@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is the full assembler code for the Atari XL/XE demo Behold demo by Suspect.
+This is the full assembler code for the Atari XL/XE Behold demo by Suspect.
 It can be assembled using MADS and has been written using the WUDSN environment for Eclipse.
 
 **Title:**            Behold
