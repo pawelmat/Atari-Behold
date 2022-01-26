@@ -4,6 +4,7 @@
 ; started 26/11/2018 - 27/01/2019 (an hour here and there...)
 ; Continued in 1/08/2020 - 21/08/2021
 ; Presented at Silly Venture 2021 - ranked #1
+; Copyright (C) 2021 Pawel Matusz. Distributed under the terms of the GNU GPL-3.0.
 ;
 ; This should run on a stock 65k Atari XL/XE.
 ; 2 POKEYs recommended but works on one
