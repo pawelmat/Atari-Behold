@@ -1,5 +1,6 @@
 ; ******************************************************
 ; BEHOLD demo, Kane / Suspect, 08/2021
+; Copyright (C) 2021 Pawel Matusz. Distributed under the terms of the GNU GPL-3.0.
 ;
 ; Fire effect and related procedures
 ; ******************************************************
