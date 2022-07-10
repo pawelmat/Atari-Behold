@@ -38,7 +38,7 @@
 			<br>
 			<div id="footer-wrapper">
 				<table class="centertab">
-					  <tr><td><label class="tc1">(C)2021 Kane / Suspect</label></td></tr>
+					  <tr><td><label class="tc1">(C)2021-2022 Kane / Suspect</label></td></tr>
 				</table>
 				<br>
 			</div>
@@ -639,6 +639,79 @@
 
 	}
 
+//------------------------------------------------------------------------------------
+// 06
+
+	var		palette06 =  [0,0x10,0x12,0x14,0x16,0x18,0x1a,0x1c,0x9f]
+	var		buf06 = new Array(256)
+	var		pz06 = [[0,1,0,0,1,0,0,0],[1,1,1,0,1,0,1,0],[0,1,1,1,1,1,0,1],[1,1,1,0,1,0,1,0],[0,1,0,0,1,0,0,0]]
+
+	function init06() {
+		fps = 50
+		
+		t1 = 0			// running index in buf
+		t3 = 0			// last Y plotpoint
+		t4 = 0			// current Y
+		
+		for(var i=0; i<256; i++) { buf06[i]=t3 }	// zero the floor
+	}
+
+	function pzDraw06(c) {
+		for(var x=0; x<5; x++) {
+			var e2 = pz06[x]
+			e4 = buf06[(t2+t5)%256]		// start y
+			for(var y=0; y<8; y++) {
+				if(e2[y] != 0) {
+					s[t5+x][height-1-e4-2*y] = c
+					s[t5+x][height-1-e4-2*y-1] = c
+				}
+			}
+		}
+	}
+
+
+	function effect06() {
+
+		// draw pz
+		t5 = 10
+		pzDraw06(0)
+		t5 = 30
+		pzDraw06(0)
+
+		t1++
+		t1%=256
+		t2=t1
+
+		// add next plotpoint
+		if (t3==t4) {
+			t3=Math.floor(Math.random()*256)%32
+		}
+		e1 = Math.floor(Math.random()*2)		// random stay/increase
+		if (e1>0) {								// if increase
+			if(t4<t3) {
+				t4++
+			} else {
+				t4--
+			}
+		}
+		buf06[(t2+width)%256] = t4
+
+		// draw/move floor
+		for(var x=-1; x<width-1; x++) {
+			y = buf06[(t2+x)%256]
+			if (x>=0) {
+				s[x][height-1-y] = 0x88
+			}
+			s[x+1][height-1-y] = 0
+		
+		}
+
+		t5 = 10
+		pzDraw06(0x55)
+		t5 = 30
+		pzDraw06(0x22)
+
+	}
 
 //------------------------------------------------------------------------------------
 	var	effects = [
@@ -647,9 +720,10 @@
 			["2",init02,effect02,palette02],
 			["3",init03,effect03,palette03],
 			["4",init04,effect04,palette04],
-			["5",init05,effect05,palette05]
+			["5",init05,effect05,palette05],
+			["6",init06,effect06,palette06]
 		]
-	var defaultEffect = 3
+	var defaultEffect = 6
 
 //------------------------------------------------------------------------------------
 			
