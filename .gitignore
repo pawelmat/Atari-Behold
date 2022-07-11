@@ -1,7 +1,7 @@
 atasm-build.json
-behold.atdbg
-behold.brk
-behold.lab
-behold.lst
-behold.xex
+*.atdbg
+*.brk
+*.lab
+*.lst
+*.xex
 bookmarks.json
