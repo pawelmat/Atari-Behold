@@ -4,6 +4,7 @@
 
 This is the full assembler code for the Atari XL/XE Behold demo by Suspect.
 It can be assembled using MADS and has been written using the WUDSN environment for Eclipse.
+It can also be assembled using VS Code and the Atasm Altirra Bridge extension, specifying MADS as the assember in the extension's preferences. 
 
 **Title:**            Behold
 
