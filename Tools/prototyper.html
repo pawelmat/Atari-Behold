@@ -30,6 +30,10 @@
 							Refresh: &nbsp;<label id="refCnt" style="color:yellow;">0</label>
 							<br>
 							</div>
+							<div id="startStopButtons">
+								&nbsp;<label class="button2" onclick="pauseEffect()">&nbsp; <label id="pauseLabel">Pause</label> &nbsp;</label>
+								<br><br>
+							</div>
 							<div id="effectButtons">
 							</div>
 					</tr></table>
@@ -57,7 +61,7 @@
 	var		updateCanvasTimer = null, secondTimer = null, effectTimer=null
 	var		updateCnt = 0
 	var		secondsCnt = 0
-
+	var		paused = false
 
 
 	// "entry" function executed on page load complete
@@ -141,9 +145,24 @@
 		}
 		$("#effectButtons").html(s)
 	}
+
+	// pause/unpause execution
+	function pauseEffect() {
 	
+	var s = ""
+	if (paused) {
+		s="Pause"
+		paused=false
+	} else {
+		s="Start"
+		paused=true
+	}
+	$("#pauseLabel").html(s)
+}
+
 	// updates canvas with latest screen data
 	function updateCanvas(){
+		if (paused) return
 		for(var x=0; x<width; x++) {
 			for(var y=0; y<height; y++) {
 				let b=s[x][y]%256
@@ -171,6 +190,7 @@
 	}
 
 	function countSeconds() {
+		if (paused) return
 		secondsCnt++
 		printSecondsCnt()
 	}
@@ -191,6 +211,7 @@
 	
 	// effect handler on fps timer
 	function effectHandler() {
+		if (paused) return
 		if (effectNr!=0) {
 			eff = effects[effectNr][2]
 			eff()
@@ -776,6 +797,64 @@ var		palette07 =  [0,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1a,0x1b
 	}
 
 //------------------------------------------------------------------------------------
+// 08
+
+var		palette08 =  [0,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1a,0x1b,0x1c,0x1d,0x1e,0x9f]
+
+function init08() {
+//	t1 = 60, t2 = 120		// x min, max
+//	t3 = 40, t4 = 124		// y min, max
+	t1 = 130, t2 = 50		// x min, max
+	t3 = 120, t4 = 50		// y min, max
+
+	t11 = 0 		// direction change counter
+	t20 = 1			// +/- value
+}
+
+function effect08() {
+	// change direction
+	t11++
+	if (t11>128) {
+		t11 = 0
+		t20 *=-1
+//		t1+=10
+//		t4+=16
+	}
+
+	console.log(effectNr + ": "+t1+","+t2+","+t3+","+t4+","+t20+",")
+
+	// move
+	t1+=t20, t2-=t20
+	t3+=t20, t4-=t20
+	t1=t1%256, t2=t2%256, t3=t3%256, t4=t4%256
+
+	t10 = (t2-t1)/32		// x,y step given the screen resolution
+	t10=t10%256
+
+	t6 = t3						// start y0 (Mandelbrot Y start coord)
+	for(var y=0; y<height; y++) {
+		t5 = t1					// start x0 (Mandelbrot X start coord)
+		for(var x=0; x<width; x++) {
+			t7 = 0				// x
+			t8 = 0				// y
+			t9	= 0				// iteration (colour)
+			while ((t7 + t8 < 1) && (t9<15)) {		// sqrt(x^2+y^2) < 2 which bounds the Mandlebrot set
+				t12 = t7 - t8 + t5	// x = x^2 - y^2 + x0
+				t8 = t7 + t8 + t6			// y = 2xy + y0
+				t7 = t12
+				t7=t7%256, t8=t8%256
+				t9 ++
+			}			
+			c=t9							// colour index is the number of iterations before the sequence escapes beyond 2 
+			s[x][y] = c%16 + 16*(c%16)
+			t5 += t10
+		}
+		t6 += t10
+	}
+
+}
+
+//------------------------------------------------------------------------------------
 	var	effects = [
 			["0",null,null,null],
 			["1",init01,effect01,palette01],
@@ -784,9 +863,10 @@ var		palette07 =  [0,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1a,0x1b
 			["4",init04,effect04,palette04],
 			["5",init05,effect05,palette05],
 			["6",init06,effect06,palette06],
-			["7",init07,effect07,palette07]
+			["7",init07,effect07,palette07],
+			["8",init08,effect08,palette08]
 		]
-	var defaultEffect = 7
+	var defaultEffect = 8
 
 //------------------------------------------------------------------------------------
 			
