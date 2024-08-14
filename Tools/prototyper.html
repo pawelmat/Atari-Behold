@@ -14,7 +14,8 @@
 	</head>
 	<body style="background-color:black; color:white;">
 
-			<div align="center" id="level-editor">
+			<div align="center" id="proto-main">
+				<br>
 				<table style="width:1100px"><tr><td>
 					<table style="border-spacing: 0px;"><tr>
 						<td align="left" style="width:650px;text-align: left;border: 1px solid green;border-radius: 4px;vertical-align:center;padding:10px">
@@ -42,7 +43,7 @@
 			<br>
 			<div id="footer-wrapper">
 				<table class="centertab">
-					  <tr><td><label class="tc1">(C)2021-2023 Kane / Suspect</label></td></tr>
+					  <tr><td><label class="tc1">(C)2021-2024 Kane / Suspect</label></td></tr>
 				</table>
 				<br>
 			</div>
@@ -87,6 +88,12 @@
 		clearPalette()
 		startTimers()
 		runEffect(defaultEffect)
+	});
+
+	// Install keypress handler
+	$(document).on("keypress", function (e) {
+		if (e.keyCode == 32)	// Space
+			pauseEffect()
 	});
 
 	function startTimers() {
@@ -853,7 +860,132 @@ function effect08() {
 	}
 
 }
+//------------------------------------------------------------------------------------
+// 09
 
+	var		palette09 =  [0,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1a,0x1b,0x1c,0x1d,0x1e,0x1f]
+	//var		palette09 =  [0,0x01,0x12,0x14,0xf6,0xf8,0xfa,0xfe,0x0f]
+
+	var		sparks09 = new Array(16)
+
+	function init09() {
+		fps = 50
+	
+		t1 = 0		// decrease screen intensity counter
+		t2 = 0		// current spark being defined
+		t3 = width/2	// attractor position
+		t4 = height/2
+
+		t7 = 0
+		t8 = 40
+
+		t13 = 1
+		t14 = 1
+
+		e1 = 256	// sin period in samples
+		e2 = 14		// amplitude
+		e3 = 15		// max colour
+		e4 = 15		// max nr of sparks
+		e5 = 3		// trail length
+
+		for (var i = 0; i < sparks09.length; i++) {
+			sparks09[i] = new Array(32)
+			sparks09[i][0] = 0
+		}
+	}
+
+	function dimScreen09() {
+		for(var x=0; x<width; x++) {
+				for(var y=0; y<height; y++) {
+					c = s[x][y]
+					if (c>0) {
+						c = c - (0x11)
+						s[x][y] = c
+						xd = (Math.floor(Math.random()*256)%2)
+//						if (Math.floor(Math.random()*256)%2 == 1) xd=-xd
+						yd = (Math.floor(Math.random()*256)%2)
+//						if (Math.floor(Math.random()*256)%2 == 1) yd=-yd
+						if (x+xd < width)
+							s[x+xd][y+yd] = c
+					}
+				}
+			}
+	}
+
+	function effect09() {
+		t1++
+		t1%=e5
+		if (t1==0) {
+			dimScreen09()	// dim screen by 1 shade every "t2" frame
+		}
+
+/* 		t10 = Math.floor(Math.random()*256)%16	// nr of steps
+		sparks09[t2][0] = t10
+		t11 = Math.floor(Math.random()*256)%2	//dir x
+		if (Math.floor(Math.random()*256)%2 == 1) t11=-t11
+		t12 = Math.floor(Math.random()*256)%2		//dir y
+		if (Math.floor(Math.random()*256)%2 == 1) t12=-t12
+		t5 = t3		// attractor x
+		t6 = t4		// attractor y
+		for(var i=0; i<t10; i++) {
+			sparks09[t2][(i+1)*2] = t5
+			sparks09[t2][(i+1)*2+1] = t6
+			t5 = t5 + t11
+			if (t5<0) t5=0; if (t5>width-1) t5=width-1
+			t6 = t6 + t12
+			if (t6<0) t6=0; if (t6>height-1) t6=height-1
+		}
+		t2++		// move to next spark
+		t2%=e4
+ */
+
+	    t10 = Math.floor(Math.random()*256)%16	// nr of steps
+		sparks09[t2][0] = t10
+		t11 = Math.floor(Math.random()*256)%4	//dir x
+		if (Math.floor(Math.random()*256)%2 == 1) t11=-t11
+		t12 = Math.floor(Math.random()*256)%4		//dir y
+		if (Math.floor(Math.random()*256)%2 == 1) t12=-t12
+		t5 = 0		// attractor x
+		t6 = 0		// attractor y
+		for(var i=0; i<t10; i++) {
+			sparks09[t2][(i+1)*2] = t5
+			sparks09[t2][(i+1)*2+1] = t6
+			t5 = t5 + t11
+			t6 = t6 + t12
+		}
+		t2++		// move to next spark
+		t2%=e4
+
+
+		for (var k=0; k<e4; k++) {
+			if (sparks09[k][0] !=0 ) {
+				i = sparks09[k][0]
+				x = t3 + sparks09[k][i*2]
+				y = t4 + sparks09[k][i*2+1]
+
+//				x += (Math.floor(Math.random()*256)%2)
+//				y += (Math.floor(Math.random()*256)%2)
+
+				if (x<0) x=0; if (x>width-1) x=width-1
+				if (y<0) y=0; if (y>height-1) y=height-1
+
+				i--
+				sparks09[k][0] = i
+
+				s[x][y] = e3*16+e3
+				s[x][y+1] = e3*16+e3				
+			}
+		}
+
+		if (t1==0) {
+			t3 = t3 + t13
+			t4 = t4 + t14
+			if (t3<0 | t3>width) t13 = -t13
+			if (t4<0 | t4>height) t14 = -t14
+		}
+
+	}
+	
 //------------------------------------------------------------------------------------
 	var	effects = [
 			["0",null,null,null],
@@ -864,9 +996,10 @@ function effect08() {
 			["5",init05,effect05,palette05],
 			["6",init06,effect06,palette06],
 			["7",init07,effect07,palette07],
-			["8",init08,effect08,palette08]
+			["8",init08,effect08,palette08],
+			["9",init09,effect09,palette09]
 		]
-	var defaultEffect = 8
+	var defaultEffect = 9
 
 //------------------------------------------------------------------------------------
 			
