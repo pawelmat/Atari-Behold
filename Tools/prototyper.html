@@ -43,7 +43,7 @@
 			<br>
 			<div id="footer-wrapper">
 				<table class="centertab">
-					  <tr><td><label class="tc1">(C)2021-2024 Kane / Suspect</label></td></tr>
+					  <tr><td><label class="tc1">(C)2021-2025 Kane / Suspect</label></td></tr>
 				</table>
 				<br>
 			</div>
@@ -744,9 +744,8 @@
 //------------------------------------------------------------------------------------
 // 07
 
-//var		palette07 =  [0,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,9,10,11,12,13,14,15]
-var		palette07 =  [0,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1a,0x1b,0x1c,0x1d,0x1e,0x9f]
-
+	//var		palette07 =  [0,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,9,10,11,12,13,14,15]
+	var		palette07 =  [0,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1a,0x1b,0x1c,0x1d,0x1e,0x9f]
 
 	function init07() {
 		fps = 50
@@ -806,66 +805,62 @@ var		palette07 =  [0,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1a,0x1b
 //------------------------------------------------------------------------------------
 // 08
 
-var		palette08 =  [0,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1a,0x1b,0x1c,0x1d,0x1e,0x9f]
+	var		palette08 =  [0,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1a,0x1b,0x1c,0x1d,0x1e,0x9f]
 
-function init08() {
-//	t1 = 60, t2 = 120		// x min, max
-//	t3 = 40, t4 = 124		// y min, max
-	t1 = 130, t2 = 50		// x min, max
-	t3 = 120, t4 = 50		// y min, max
+	function init08() {
+		t1 = 130, t2 = 50		// x min, max
+		t3 = 120, t4 = 50		// y min, max
 
-	t11 = 0 		// direction change counter
-	t20 = 1			// +/- value
-}
-
-function effect08() {
-	// change direction
-	t11++
-	if (t11>128) {
-		t11 = 0
-		t20 *=-1
-//		t1+=10
-//		t4+=16
+		t11 = 0 		// direction change counter
+		t20 = 1			// +/- value
 	}
 
-	console.log(effectNr + ": "+t1+","+t2+","+t3+","+t4+","+t20+",")
-
-	// move
-	t1+=t20, t2-=t20
-	t3+=t20, t4-=t20
-	t1=t1%256, t2=t2%256, t3=t3%256, t4=t4%256
-
-	t10 = (t2-t1)/32		// x,y step given the screen resolution
-	t10=t10%256
-
-	t6 = t3						// start y0 (Mandelbrot Y start coord)
-	for(var y=0; y<height; y++) {
-		t5 = t1					// start x0 (Mandelbrot X start coord)
-		for(var x=0; x<width; x++) {
-			t7 = 0				// x
-			t8 = 0				// y
-			t9	= 0				// iteration (colour)
-			while ((t7 + t8 < 1) && (t9<15)) {		// sqrt(x^2+y^2) < 2 which bounds the Mandlebrot set
-				t12 = t7 - t8 + t5	// x = x^2 - y^2 + x0
-				t8 = t7 + t8 + t6			// y = 2xy + y0
-				t7 = t12
-				t7=t7%256, t8=t8%256
-				t9 ++
-			}			
-			c=t9							// colour index is the number of iterations before the sequence escapes beyond 2 
-			s[x][y] = c%16 + 16*(c%16)
-			t5 += t10
+	function effect08() {
+		// change direction
+		t11++
+		if (t11>128) {
+			t11 = 0
+			t20 *=-1
+	//		t1+=10
+	//		t4+=16
 		}
-		t6 += t10
+
+		console.log(effectNr + ": "+t1+","+t2+","+t3+","+t4+","+t20+",")
+
+		// move
+		t1+=t20, t2-=t20
+		t3+=t20, t4-=t20
+		t1=t1%256, t2=t2%256, t3=t3%256, t4=t4%256
+
+		t10 = (t2-t1)/32		// x,y step given the screen resolution
+		t10=t10%256
+
+		t6 = t3						// start y0 (Mandelbrot Y start coord)
+		for(var y=0; y<height; y++) {
+			t5 = t1					// start x0 (Mandelbrot X start coord)
+			for(var x=0; x<width; x++) {
+				t7 = 0				// x
+				t8 = 0				// y
+				t9	= 0				// iteration (colour)
+				while ((t7 + t8 < 1) && (t9<15)) {		// sqrt(x^2+y^2) < 2 which bounds the Mandlebrot set
+					t12 = t7 - t8 + t5	// x = x^2 - y^2 + x0
+					t8 = t7 + t8 + t6			// y = 2xy + y0
+					t7 = t12
+					t7=t7%256, t8=t8%256
+					t9 ++
+				}			
+				c=t9							// colour index is the number of iterations before the sequence escapes beyond 2 
+				s[x][y] = c%16 + 16*(c%16)
+				t5 += t10
+			}
+			t6 += t10
+		}
 	}
 
-}
 //------------------------------------------------------------------------------------
 // 09
 
 	var		palette09 =  [0,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1a,0x1b,0x1c,0x1d,0x1e,0x1f]
-	//var		palette09 =  [0,0x01,0x12,0x14,0xf6,0xf8,0xfa,0xfe,0x0f]
-
 	var		sparks09 = new Array(16)
 
 	function init09() {
@@ -896,20 +891,18 @@ function effect08() {
 
 	function dimScreen09() {
 		for(var x=0; x<width; x++) {
-				for(var y=0; y<height; y++) {
-					c = s[x][y]
-					if (c>0) {
-						c = c - (0x11)
-						s[x][y] = c
-						xd = (Math.floor(Math.random()*256)%2)
-//						if (Math.floor(Math.random()*256)%2 == 1) xd=-xd
-						yd = (Math.floor(Math.random()*256)%2)
-//						if (Math.floor(Math.random()*256)%2 == 1) yd=-yd
-						if (x+xd < width)
-							s[x+xd][y+yd] = c
-					}
+			for(var y=0; y<height; y++) {
+				c = s[x][y]
+				if (c>0) {
+					c = c - (0x11)
+					s[x][y] = c
+					xd = (Math.floor(Math.random()*256)%2)
+					yd = (Math.floor(Math.random()*256)%2)
+					if (x+xd < width)
+						s[x+xd][y+yd] = c
 				}
 			}
+		}
 	}
 
 	function effect09() {
@@ -918,26 +911,6 @@ function effect08() {
 		if (t1==0) {
 			dimScreen09()	// dim screen by 1 shade every "t2" frame
 		}
-
-/* 		t10 = Math.floor(Math.random()*256)%16	// nr of steps
-		sparks09[t2][0] = t10
-		t11 = Math.floor(Math.random()*256)%2	//dir x
-		if (Math.floor(Math.random()*256)%2 == 1) t11=-t11
-		t12 = Math.floor(Math.random()*256)%2		//dir y
-		if (Math.floor(Math.random()*256)%2 == 1) t12=-t12
-		t5 = t3		// attractor x
-		t6 = t4		// attractor y
-		for(var i=0; i<t10; i++) {
-			sparks09[t2][(i+1)*2] = t5
-			sparks09[t2][(i+1)*2+1] = t6
-			t5 = t5 + t11
-			if (t5<0) t5=0; if (t5>width-1) t5=width-1
-			t6 = t6 + t12
-			if (t6<0) t6=0; if (t6>height-1) t6=height-1
-		}
-		t2++		// move to next spark
-		t2%=e4
- */
 
 	    t10 = Math.floor(Math.random()*256)%16	// nr of steps
 		sparks09[t2][0] = t10
@@ -956,15 +929,11 @@ function effect08() {
 		t2++		// move to next spark
 		t2%=e4
 
-
 		for (var k=0; k<e4; k++) {
 			if (sparks09[k][0] !=0 ) {
 				i = sparks09[k][0]
 				x = t3 + sparks09[k][i*2]
 				y = t4 + sparks09[k][i*2+1]
-
-//				x += (Math.floor(Math.random()*256)%2)
-//				y += (Math.floor(Math.random()*256)%2)
 
 				if (x<0) x=0; if (x>width-1) x=width-1
 				if (y<0) y=0; if (y>height-1) y=height-1
@@ -985,7 +954,37 @@ function effect08() {
 		}
 
 	}
+
+//------------------------------------------------------------------------------------
+// 10
+
+	var		palette10 =  [0,0x10,0x11,0x12,0x13,0x14,0x15,0x16,0x17,0x18,0x19,0x1a,0x1b,0x1c,0x1d,0x1e,0x1f]
+
+	function init10() {
+		fps = 50
 	
+		t1 = 0		// decrease screen intensity counter
+		t2 = 0		// current spark being defined
+		t3 = width/2	// attractor position
+		t4 = height/2
+
+		t7 = 0
+		t8 = 40
+
+	}
+
+	function effect10() {
+		t1++
+
+		for(var x=0; x<width; x++) {
+			for(var y=0; y<height; y++) {
+				c = x/y+Math.floor(y+x*Math.cos(t1*2*Math.PI/200)) + Math.floor(x+y*Math.sin(t1*2*Math.PI/200))
+				c = Math.floor(c)
+				s[x][y] = c%16 + 16*(c%16)
+			}
+		}
+	}
+
 //------------------------------------------------------------------------------------
 	var	effects = [
 			["0",null,null,null],
@@ -997,9 +996,10 @@ function effect08() {
 			["6",init06,effect06,palette06],
 			["7",init07,effect07,palette07],
 			["8",init08,effect08,palette08],
-			["9",init09,effect09,palette09]
+			["9",init09,effect09,palette09],
+			["10",init10,effect10,palette10]
 		]
-	var defaultEffect = 9
+	var defaultEffect = 10
 
 //------------------------------------------------------------------------------------
 			
